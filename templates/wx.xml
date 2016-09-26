@@ -1,0 +1,9 @@
+$def with (toUser,fromUser,createTime,content,funcFlag=0)
+<xml>
+<ToUserName><![CDATA[$fromUser]]></ToUserName>
+<FromUserName><![CDATA[$toUser]]></FromUserName>
+<CreateTime>$createTime</CreateTime>
+<MsgType><![CDATA[text]]></MsgType>
+<Content><![CDATA[$content]]></Content>
+<FuncFlag>$funcFlag</FuncFlag>
+</xml>
