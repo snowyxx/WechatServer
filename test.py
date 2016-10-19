@@ -11,12 +11,62 @@ from conf import wxLogger
 from conf import products
 
 urls = (
-    "/.*", "hello",
+    "/", "hello",
+    "/getnickname", "getnickname"
 )
+
 web.config.debug = True
 app = web.application(urls, globals())
 render = web.template.render('templates/')
 
+class getnickname:
+    '''demo class to fetch user name with Oauth2 code. 
+    ***JUST FOR DEMO ***
+    http://mp.weixin.qq.com/wiki/17/c0f37d5704f0b64713d5d2c37b468d75.html
+    http://qydev.weixin.qq.com/wiki/index.php?title=%E9%A6%96%E9%A1%B5
+    '''
+    def GET(self):
+        try:
+            data = web.input()
+            wxLogger.info(data)
+            code = data.code
+            atype = data.atype
+            if atype == 'sub':
+                Oauthurl = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid={0}&secret={1}&code={2}&grant_type=authorization_code'.format('your app id', 'your secret', code)
+                response = urllib2.urlopen(Oauthurl).read().decode('utf-8')
+                wxLogger.info(response)
+                resDir = json.loads(response)
+                openid = resDir['openid']
+                access_token = resDir['access_token']
+                userInfoUrl = 'https://api.weixin.qq.com/sns/userinfo?access_token={0}&openid={1}&lang=zh_CN'.format(access_token, openid)
+                response = urllib2.urlopen(userInfoUrl).read().decode('utf-8')
+                wxLogger.info(response)
+                resDir = json.loads(response)
+                nickname = resDir['nickname']
+            elif atype == 'ent':
+                #get api access_token   http://qydev.weixin.qq.com/wiki/index.php?title=%E4%B8%BB%E5%8A%A8%E8%B0%83%E7%94%A8
+                url = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={0}&corpsecret={1}".format('your app id', 'your secret')
+                response = urllib2.urlopen(url).read().decode('utf-8')
+                resDir = json.loads(response)
+                access_token = resDir['access_token']
+                
+                #get user id   http://qydev.weixin.qq.com/wiki/index.php?title=OAuth%E9%AA%8C%E8%AF%81%E6%8E%A5%E5%8F%A3
+                url = "https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo?access_token={0}&code={1}".format(access_token, code)
+                response = urllib2.urlopen(url).read().decode('utf-8')
+                resDir = json.loads(response)
+                userid = resDir['UserId']
+                
+                #get user name http://qydev.weixin.qq.com/wiki/index.php?title=%E7%AE%A1%E7%90%86%E6%88%90%E5%91%98#.E8.8E.B7.E5.8F.96.E6.88.90.E5.91.98
+                url = 'https://qyapi.weixin.qq.com/cgi-bin/user/get?access_token={0}&userid={1}'.format(access_token, userid)
+                response = urllib2.urlopen(url).read().decode('utf-8')
+                resDir = json.loads(response)
+                username = resDir['name']
+                nickname = username
+            else:
+                nickname = 'Unknown user from WeChat'
+            return nickname
+        except Exception, e:
+            return 'Unknown user from WeChat'
 
 class hello:
 
